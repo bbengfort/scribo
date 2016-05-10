@@ -1,0 +1,132 @@
+<!doctype html>
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="author" content="Benjamin Bengfort">
+    <meta name="keywords" content="scribo, mora, ping, latency, distributed systems, umd">
+    <meta name="description" content="The web API to record data for the Mora ping measurement app.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Scribo Dashboard | Mora</title>
+
+    <!-- Shortcut Icons -->
+    <link rel="shortcut icon" href="/assets/img/favicon.ico">
+
+    <!-- CDN CSS Files -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-XdYbMnZ/QjLh6iI4ogqCTaIjrFk87ip+ekIjefZch0Y+PvJ8CDYtEs1ipDmPorQ+" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.6/simplex/bootstrap.min.css" rel="stylesheet" integrity="sha384-/Ib5WUYOh/fqe9wT9MDBX+VgUWQuUf8oDH3yuR9Kr+6Y5ejq92KR8LEuCbRiGZpG" crossorigin="anonymous">
+
+    <!-- Local Stylesheet Assets -->
+    <link rel="stylesheet" href="/assets/css/scribo.css">
+  </head>
+  <body>
+
+    <div id="wrap">
+
+      <nav class="navbar navbar-default">
+         <div class="container">
+           <!-- Brand and toggle get grouped for better mobile display -->
+           <div class="navbar-header">
+             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-collapse-left">
+               <span class="sr-only">Toggle navigation</span>
+               <span class="icon-bar"></span>
+               <span class="icon-bar"></span>
+               <span class="icon-bar"></span>
+             </button>
+             <a class="navbar-brand" href="/">Scribo Dashboard</a>
+           </div>
+
+           <!-- Collect the nav links, forms, and other content for toggling -->
+           <div class="collapse navbar-collapse" id="bs-collapse-left">
+             <ul class="nav navbar-nav navbar-right">
+               <li class="dropdown">
+                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                   <i class="fa fa-cogs"></i> Resources <span class="caret"></span></a>
+                 <ul class="dropdown-menu" role="menu">
+                   <li>
+                     <a href="http://scribo.readthedocs.org/en/latest/">
+                       <i class="fa fa-book"></i>
+                       Documentation
+                     </a>
+                   </li>
+                   <li>
+                     <a href="https://github.com/bbengfort/scribo/">
+                       <i class="fa fa-github-square"></i>
+                       Repository
+                     </a>
+                   </li>
+                   <li>
+                     <a href="https://waffle.io/bbengfort/scribo/">
+                       <i class="fa fa-trello"></i>
+                       Agile Board
+                     </a>
+                   </li>
+                 </ul>
+               </li>
+             </ul>
+           </div><!-- /.navbar-collapse -->
+         </div><!-- /.container-fluid -->
+        </nav>
+
+      <!-- Begin page content -->
+      <div id="content">
+
+        <div class="container">
+          <div class="row">
+            <div class="col-md-12">
+
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Latency Report</h3>
+                </div>
+                <div class="panel-body">
+                  <p>This application is an uptime collection mechanism associated with the Mora project.</p>
+
+                  <img style="width:100%;" src="/assets/img/mora.png" title="Mora Architecture Diagram" />
+                  <p class="text-center text-info"><small><strong>Figure 1: The Mora Architecture</strong></small></p>
+
+
+                  <p>Mora (delay, waiting) observes ping latencies between nodes in a wide area, heterogenous, user-oriented network by running a local service that pings other nodes in the network. Oro (speak) is the name of the mobile application, and Scio (understand) is the name of the desktop client.</p>
+                  <p>Soon this page will display the latest observed status of the ping network, but is still under construction.</p>
+                </div>
+              </div>
+
+            </div>
+          </div><!-- row ends -->
+
+        </div><!-- container ends -->
+      </div><!-- content ends -->
+
+    </div>
+
+
+    <div id="footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-xs-6">
+            <ul class="list-unstyled list-inline">
+              <li><a href="http://mora.readthedocs.org/en/latest/"><i class="fa fa-book"></i></a></li>
+              <li><a href="https://github.com/bbengfort/scribo/"><i class="fa fa-github-square"></i></a></li>
+              <li><a href="https://waffle.io/bbengfort/scribo/"><i class="fa fa-trello"></i></a></li>
+            </ul>
+          </div>
+          <div class="col-xs-6">
+            <p class="text-right text-muted">
+              Created by <a href="https://github.com/bbengfort/">@bbengfort</a> at <a href="https://twitter.com/umdcs/">@umdcs</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CDN JS Files -->
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+
+    <!-- Local JavaScript Assets -->
+    <script src="/assets/js/scribo.js" type="text/javascript"></script>
+
+  </body>
+</html>
