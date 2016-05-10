@@ -1,0 +1,12 @@
+langauge: go
+
+go:
+    - 1.5
+    - 1.6
+
+script: ginkgo -r -v
+
+notifications:
+    email:
+        on_success: change
+        on_failure: always
