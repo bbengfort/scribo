@@ -4,6 +4,11 @@ go:
     - 1.5
     - 1.6
 
+install:
+    - export PATH=$PATH:$HOME/gopath/bin
+    - go get github.com/tools/godep
+    - godep restore
+
 script: ginkgo -r -v
 
 notifications:
