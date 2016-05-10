@@ -1,8 +1,20 @@
 package main
 
-import "github.com/bbengfort/scribo/scribo"
+import (
+	"os"
+
+	"github.com/bbengfort/scribo/scribo"
+)
 
 func main() {
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		port = "8080"
+	}
+
+	addr := ":" + port
+
 	app := scribo.CreateApp()
-	app.Run("localhost:8080")
+	app.Run(addr)
 }
