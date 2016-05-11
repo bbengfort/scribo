@@ -3,7 +3,6 @@ package scribo
 import (
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,18 +13,13 @@ import (
 
 // Index handles the root route by rendering a small web page that uses the
 // API to display information about the ping status.
-func Index(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/index.html")
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = tmpl.Execute(w, nil)
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func Index(app *App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := app.Templates.ExecuteTemplate(w, "index", nil)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
