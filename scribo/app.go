@@ -68,7 +68,13 @@ func (app *App) Run(port int) {
 func (app *App) AddRoute(route Route) {
 	var handler http.Handler
 	handler = route.Handler(app)
-	handler = logger(handler, route.Name)
+
+	if route.Authorize {
+		handler = Authenticate(handler)
+	}
+
+	handler = Logger(handler)
+	// handler = Debugger(handler)
 
 	app.Router.
 		Methods(route.Methods...).
@@ -80,7 +86,7 @@ func (app *App) AddRoute(route Route) {
 // AddStatic creates a handler to serve static files.
 func (app *App) AddStatic(staticDir string) {
 	static := http.StripPrefix("/assets/", http.FileServer(http.Dir(staticDir)))
-	app.Router.PathPrefix("/assets/").Handler(logger(static, "Assets"))
+	app.Router.PathPrefix("/assets/").Handler(Logger(static))
 }
 
 // Abort is a handler to terminate the request with no error message
