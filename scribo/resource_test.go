@@ -60,7 +60,7 @@ var _ = Describe("Resource", func() {
 
 		It("should handle GET requests properly", func() {
 			var handle http.HandlerFunc
-			app := &App{"", "", nil, nil}
+			app := &App{"", "", nil, nil, nil}
 			request, _ := http.NewRequest(GET, "/books", nil)
 			route := CreateResourceRoute(BookResource{}, "BookResource", "/books")
 
@@ -79,7 +79,7 @@ var _ = Describe("Resource", func() {
 
 		It("should handle POST requests properly", func() {
 			var handle http.HandlerFunc
-			app := &App{"", "", nil, nil}
+			app := &App{"", "", nil, nil, nil}
 			request, _ := http.NewRequest(POST, "/books", nil)
 			route := CreateResourceRoute(BookResource{}, "BookResource", "/books")
 
@@ -98,7 +98,7 @@ var _ = Describe("Resource", func() {
 
 		It("should handle PUT requests properly", func() {
 			var handle http.HandlerFunc
-			app := &App{"", "", nil, nil}
+			app := &App{"", "", nil, nil, nil}
 			request, _ := http.NewRequest(PUT, "/books", nil)
 			route := CreateResourceRoute(BookResource{}, "BookResource", "/books")
 
@@ -117,7 +117,7 @@ var _ = Describe("Resource", func() {
 
 		It("should handle DELETE requests properly", func() {
 			var handle http.HandlerFunc
-			app := &App{"", "", nil, nil}
+			app := &App{"", "", nil, nil, nil}
 			request, _ := http.NewRequest(DELETE, "/books", nil)
 			route := CreateResourceRoute(BookResource{}, "BookResource", "/books")
 
@@ -157,7 +157,7 @@ var _ = Describe("Resource", func() {
 		BeforeEach(func() {
 			// Set up the test suite
 			resource = Unresponsive{}
-			app = &App{"", "", nil, nil}
+			app = &App{"", "", nil, nil, nil}
 			url = "/test"
 		})
 

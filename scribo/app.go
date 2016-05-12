@@ -1,6 +1,7 @@
 package scribo
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -21,6 +22,7 @@ type App struct {
 	TemplateDir string
 	Templates   *template.Template
 	Router      *mux.Router
+	DB          *sql.DB
 }
 
 // CreateApp allows you to easily instantiate an App instance.
@@ -28,6 +30,9 @@ type App struct {
 func CreateApp() *App {
 	// Instantiate the app
 	app := new(App)
+
+	// Connect to the database
+	app.DB = ConnectDB()
 
 	// Set the static and template directories
 	root, _ := os.Getwd()

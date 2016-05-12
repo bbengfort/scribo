@@ -10,7 +10,7 @@ type Node struct {
 	DNS     string    `json:"dns"`     // DNS Lookup for the node
 	Key     string    `json:"-"`       // Authentication key of the node
 	Created time.Time `json:"created"` // Datetime the node was created
-	Update  time.Time `json:"updated"` // Datetime the node was updated
+	Updated time.Time `json:"updated"` // Datetime the node was updated
 }
 
 // Ping is a model that represents a latency report.
@@ -22,7 +22,7 @@ type Ping struct {
 	Latency float64   `json:"latency"` // The time in ms of the round trip
 	Timeout bool      `json:"timeout"` // Whether or not the request timed out
 	Created time.Time `json:"created"` // Datetime the ping was created
-	Update  time.Time `json:"updated"` // Datetime the ping was updated
+	Updated time.Time `json:"updated"` // Datetime the ping was updated
 }
 
 // Nodes is a collection of node items for use elsewhere.

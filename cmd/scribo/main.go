@@ -13,7 +13,7 @@ func main() {
 	portEnv := os.Getenv("PORT")
 
 	if portEnv == "" {
-		port = 8080
+		port = 5356
 	} else {
 		port, err = strconv.Atoi(portEnv)
 		if err != nil {
