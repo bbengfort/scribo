@@ -2,6 +2,7 @@ package scribo
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -60,16 +61,46 @@ func (node *Node) Save(db *sql.DB) (bool, error) {
 	node.Updated = time.Now()
 
 	// Execute the INSERT query against the database
-	query := "INSERT INTO nodes (name, address, dns, key, created, updated) VALUES ($1, $2, $3, $4, $5, $6)"
-	res, err := db.Exec(query, node.Name, node.Address, node.DNS, node.Key, node.Created, node.Updated)
+	query := "INSERT INTO nodes (name, address, dns, key, created, updated) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
+	row := db.QueryRow(query, node.Name, node.Address, node.DNS, node.Key, node.Created, node.Updated)
+	err := row.Scan(&node.ID)
 
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
-	// Set the last inserted ID as the ID of the node.
-	node.ID, err = res.LastInsertId()
 	return true, err
+}
+
+// Delete a node from the database. This method is obviously destructive and
+// returns true if the number of rows affected is 1 or false otherwise.
+func (node *Node) Delete(db *sql.DB) (bool, error) {
+	if node.ID == 0 {
+		return false, errors.New("The node doesn't have an ID accessible by the database")
+	}
+
+	query := "DELETE FROM nodes WHERE id=$1"
+	res, err := db.Exec(query, node.ID)
+
+	if err != nil {
+		return false, err
+	}
+
+	rows, err := res.RowsAffected()
+
+	switch {
+	case err != nil:
+		return false, err
+	case rows > 1:
+		return false, errors.New("Multiple deletions from the database?!")
+	case rows == 1:
+		return true, nil
+	case rows < 1:
+		return false, nil
+	default:
+		return false, errors.New("Unknown case in node deletion")
+	}
+
 }
 
 // Save a ping struct to the database. This function checks if the ping has an
@@ -98,14 +129,44 @@ func (ping *Ping) Save(db *sql.DB) (bool, error) {
 	ping.Updated = time.Now()
 
 	// Execute the INSERT query against the database
-	query := "INSERT INTO pings (source_id, target_id, payload, latency, timeout, created, updated) VALUES ($1, $2, $3, $4, $5, $6, $7)"
-	res, err := db.Exec(query, ping.Source, ping.Target, ping.Payload, ping.Latency, ping.Timeout, ping.Created, ping.Updated)
+	query := "INSERT INTO pings (source_id, target_id, payload, latency, timeout, created, updated) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
+	row := db.QueryRow(query, ping.Source, ping.Target, ping.Payload, ping.Latency, ping.Timeout, ping.Created, ping.Updated)
+	err := row.Scan(&ping.ID)
 
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 
-	// Set the last inserted ID as the ID of the node.
-	ping.ID, err = res.LastInsertId()
 	return true, err
+}
+
+// Delete a ping from the database. This method is obviously destructive and
+// returns true if the number of rows affected is 1 or false otherwise.
+func (ping *Ping) Delete(db *sql.DB) (bool, error) {
+	if ping.ID == 0 {
+		return false, errors.New("The ping doesn't have an ID accessible by the database")
+	}
+
+	query := "DELETE FROM pings WHERE id=$1"
+	res, err := db.Exec(query, ping.ID)
+
+	if err != nil {
+		return false, err
+	}
+
+	rows, err := res.RowsAffected()
+
+	switch {
+	case err != nil:
+		return false, err
+	case rows > 1:
+		return false, errors.New("Multiple deletions from the database?!")
+	case rows == 1:
+		return true, nil
+	case rows < 1:
+		return false, nil
+	default:
+		return false, errors.New("Unknown case in ping deletion")
+	}
+
 }

@@ -26,7 +26,6 @@ type App struct {
 }
 
 // CreateApp allows you to easily instantiate an App instance.
-// TODO: Allow the app to be available to other resources
 func CreateApp() *App {
 	// Instantiate the app
 	app := new(App)

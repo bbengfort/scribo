@@ -68,7 +68,7 @@ func CreateResourceRoute(resource Resource, name string, pattern string) Route {
 					code = http.StatusInternalServerError
 				}
 
-				app.Error(w, err, code)
+				app.JSONError(w, err, code)
 				return
 			}
 
