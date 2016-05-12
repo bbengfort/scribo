@@ -2,13 +2,18 @@ package scribo
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
+	"time"
 
 	"github.com/tent/hawk-go"
 )
 
+// Helper function that looks up a Node's credentials by their name.
 func getCredentials(c *hawk.Credentials) error {
 	if c.ID == "benjamin" {
 		c.Key = "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn"
@@ -61,4 +66,22 @@ func Authenticate(inner http.Handler) http.Handler {
 
 		inner.ServeHTTP(w, r)
 	})
+}
+
+// UpdateKey is the key creation mechanism for the node. It combines the Node
+// name, address, and dns fields with the current time and a simple secret
+// that is loaded from the environment. This method then sets the base64
+// encoded sha256 hash of the generated string as the key on the node.
+// Note: this method does not update the database!
+func (node *Node) UpdateKey() {
+	// Generate the plaintext version of the key.
+	secret := os.Getenv("SCRIBO_SECRET")
+	rawkey := fmt.Sprintf("%s:%s:%s:%s:%s", secret, node.Name, node.Address, node.DNS, time.Now())
+
+	// Write the Hash
+	hash := sha256.New()
+	hash.Write([]byte(rawkey))
+
+	// Set the base64 encoded key on the node.
+	node.Key = base64.URLEncoding.EncodeToString(hash.Sum(nil))
 }

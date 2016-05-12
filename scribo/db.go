@@ -30,11 +30,14 @@ func GetNode(db *sql.DB, id uint64) (Node, error) {
 	row := db.QueryRow("SELECT * FROM nodes WHERE id = $1", id)
 	err := row.Scan(&n.ID, &n.Name, &n.Address, &n.DNS, &n.Key, &n.Created, &n.Updated)
 
-	if err != nil {
-		return Node{}, err
+	switch {
+	case err == sql.ErrNoRows:
+		return Node{}, nil
+	case err != nil:
+		return n, err
+	default:
+		return n, nil
 	}
-
-	return n, nil
 }
 
 // GetNodeByName attempts to return the node from a name or an error otherwise.
@@ -44,11 +47,15 @@ func GetNodeByName(db *sql.DB, name string) (Node, error) {
 	row := db.QueryRow("SELECT * FROM nodes WHERE name = $1", name)
 	err := row.Scan(&n.ID, &n.Name, &n.Address, &n.DNS, &n.Key, &n.Created, &n.Updated)
 
-	if err != nil {
-		return Node{}, err
+	switch {
+	case err == sql.ErrNoRows:
+		return Node{}, nil
+	case err != nil:
+		return n, err
+	default:
+		return n, nil
 	}
 
-	return n, nil
 }
 
 // FetchNodes returns a collection of nodes, ordered by the updated timestamp.
@@ -59,18 +66,19 @@ func FetchNodes(db *sql.DB, limit int) (Nodes, error) {
 
 	rows, err := db.Query("SELECT * FROM nodes ORDER BY updated DESC LIMIT $1", limit)
 	if err != nil {
-		return nil, err
+		return nodes, err
 	}
 
 	for rows.Next() {
 		var n Node
 		if err := rows.Scan(&n.ID, &n.Name, &n.Address, &n.DNS, &n.Key, &n.Created, &n.Updated); err != nil {
-			return nil, err
+			return nodes, err
 		}
 
 		nodes = append(nodes, n)
 	}
 
+	rows.Close()
 	return nodes, nil
 }
 
@@ -81,11 +89,15 @@ func GetPing(db *sql.DB, id uint64) (Ping, error) {
 	row := db.QueryRow("SELECT * FROM pings WHERE id = $1", id)
 	err := row.Scan(&p.ID, &p.Source, &p.Target, &p.Payload, &p.Latency, &p.Timeout, &p.Created, &p.Updated)
 
-	if err != nil {
-		return Ping{}, err
+	switch {
+	case err == sql.ErrNoRows:
+		return Ping{}, nil
+	case err != nil:
+		return p, err
+	default:
+		return p, nil
 	}
 
-	return p, nil
 }
 
 // FetchPings returns a collection of pings, ordered by the created timestamp.
@@ -96,17 +108,18 @@ func FetchPings(db *sql.DB, limit int) (Pings, error) {
 
 	rows, err := db.Query("SELECT * FROM pings ORDER BY created DESC LIMIT $1", limit)
 	if err != nil {
-		return nil, err
+		return pings, err
 	}
 
 	for rows.Next() {
 		var p Ping
 		if err := rows.Scan(&p.ID, &p.Source, &p.Target, &p.Payload, &p.Latency, &p.Timeout, &p.Created, &p.Updated); err != nil {
-			return nil, err
+			return pings, err
 		}
 
 		pings = append(pings, p)
 	}
 
+	rows.Close()
 	return pings, nil
 }
