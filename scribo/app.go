@@ -1,11 +1,13 @@
 package scribo
 
 import (
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -43,7 +45,7 @@ func CreateApp() *App {
 	}
 
 	// Add a static file server pointing at the assets directory
-	app.addStaticHandler(app.StaticDir)
+	app.AddStatic(app.StaticDir)
 
 	return app
 }
@@ -61,14 +63,54 @@ func (app *App) AddRoute(route Route) {
 	handler = logger(handler, route.Name)
 
 	app.Router.
-		Methods(route.Method).
+		Methods(route.Methods...).
 		Path(route.Pattern).
 		Name(route.Name).
 		Handler(handler)
 }
 
-// Add the static file server handler to the app
-func (app *App) addStaticHandler(staticDir string) {
+// AddStatic creates a handler to serve static files.
+func (app *App) AddStatic(staticDir string) {
 	static := http.StripPrefix("/assets/", http.FileServer(http.Dir(staticDir)))
 	app.Router.PathPrefix("/assets/").Handler(logger(static, "Assets"))
+}
+
+// Abort is a handler to terminate the request with no error message
+func (app *App) Abort(w http.ResponseWriter, statusCode int) {
+	w.WriteHeader(statusCode)
+}
+
+// Error is a handler to terminate the request with an error message.
+func (app *App) Error(w http.ResponseWriter, err error, statusCode int) {
+	http.Error(w, err.Error(), statusCode)
+}
+
+// JSONAbort is a handler to terminate the request with a JSON response
+func (app *App) JSONAbort(w http.ResponseWriter, statusCode int) {
+	w.Header().Set(CTKEY, CTJSON)
+	w.WriteHeader(statusCode)
+
+	response := make(map[string]string)
+	response["code"] = strconv.Itoa(statusCode)
+	response["reason"] = http.StatusText(statusCode)
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+// JSONError is a handler to terminate the request with a JSON response
+func (app *App) JSONError(w http.ResponseWriter, err error, statusCode int) {
+	w.Header().Set(CTKEY, CTJSON)
+	w.WriteHeader(statusCode)
+
+	response := make(map[string]string)
+	response["code"] = strconv.Itoa(statusCode)
+	response["error"] = err.Error()
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }

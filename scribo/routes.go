@@ -8,16 +8,20 @@ type HandlerFunc func(app *App) http.HandlerFunc
 // Route allows easy definition of our API
 type Route struct {
 	Name    string
-	Method  string
+	Methods []string
 	Pattern string
 	Handler HandlerFunc
 }
 
-// Routes defines the complete route set for the API
+// Routes defines the complete route set for various non-API handlers.
 type Routes []Route
 
 var routes = Routes{
 	Route{
-		"Index", "GET", "/", Index,
+		"Index", []string{GET}, "/", Index,
 	},
+	CreateResourceRoute(NodeCollection{}, "NodeCollection", "/nodes"),
+	CreateResourceRoute(NodeDetail{}, "NodeDetail", "/nodes/{ID}"),
+	CreateResourceRoute(PingCollection{}, "PingCollection", "/pings"),
+	CreateResourceRoute(PingDetail{}, "PingDetail", "/pings/{ID}"),
 }
