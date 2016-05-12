@@ -8,10 +8,17 @@ import (
 )
 
 const (
-	GET    = "GET"    // HTTP GET method
-	POST   = "POST"   // HTTP POST method
-	PUT    = "PUT"    // HTTP PUT method
-	DELETE = "DELETE" // HTTP DELETE method
+	// GET refers to the HTTP GET method
+	GET = "GET"
+
+	// POST refers to the HTTP POST method
+	POST = "POST"
+
+	// PUT refers to the HTTP PUT method
+	PUT = "PUT"
+
+	// DELETE refers to the HTTP DELETE method
+	DELETE = "DELETE"
 
 	// CTKEY is the content type key to add to the header.
 	CTKEY = "Content-Type"
