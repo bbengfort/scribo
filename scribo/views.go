@@ -2,12 +2,18 @@ package scribo
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
+)
+
+const (
+	// StatusUnprocessableEntity is a missing status code constant in http
+	StatusUnprocessableEntity = 422
 )
 
 // Index handles the root route by rendering a small web page that uses the
@@ -48,6 +54,12 @@ type (
 
 // Get returns the listing of nodes
 func (r NodeCollection) Get(app *App, request *http.Request) (int, interface{}, error) {
+	nodes, err := FetchNodes(app.DB, 10)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
 	return http.StatusOK, nodes, nil
 }
 
@@ -72,15 +84,23 @@ func (r NodeCollection) Post(app *App, request *http.Request) (int, interface{},
 	if err := json.Unmarshal(body, &node); err != nil {
 		// If JSON parsing fails send back a 422 "unprocessable entity"
 		response := make(map[string]string)
-		response["code"] = "422"
+		response["code"] = strconv.Itoa(StatusUnprocessableEntity)
 		response["reason"] = "Could not parse JSON into a Node object."
 		response["error"] = err.Error()
-		return 422, response, nil
+		return StatusUnprocessableEntity, response, nil
 	}
 
 	// Create the node in the database
-	n := RepoCreateNode(node)
-	return http.StatusCreated, n, nil
+	_, dberr := node.Save(app.DB)
+
+	// Handle the creation conditions
+	switch {
+	case dberr != nil:
+		return http.StatusConflict, nil, dberr
+	default:
+		return http.StatusCreated, node, nil
+	}
+
 }
 
 // Get returns a single node from the database.
@@ -94,8 +114,10 @@ func (r NodeDetail) Get(app *App, request *http.Request) (int, interface{}, erro
 	}
 
 	// Query the database for the node by the ID.
-	node := RepoFindNode(nodeID)
-	// TODO: Add node not found 404 logic
+	node, err := GetNode(app.DB, nodeID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
 	return http.StatusOK, node, nil
 }
@@ -111,15 +133,62 @@ func (r NodeDetail) Put(app *App, request *http.Request) (int, interface{}, erro
 	}
 
 	// Query the database for the node by the ID.
-	node := RepoFindNode(nodeID)
-
-	// TODO: Add node not found 404 logic
+	node, err := GetNode(app.DB, nodeID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
 	// Now perform the update ...
-	// TODO: Add the update handling code
+	// Read the data from the request stream (limit the size to 1 MB)
+	body, err := ioutil.ReadAll(io.LimitReader(request.Body, 1048576))
 
-	// Return the updated node
-	return http.StatusOK, node, nil
+	// Todo return a 413 (entity too large) if it's the limit that's reached.
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Attempt to close the body of the request for reading
+	if err := request.Body.Close(); err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Create a temporary node to  unmarshall data to.
+	var fields map[string]interface{}
+
+	// Unmarshal the Put into a Node struct
+	if err := json.Unmarshal(body, &fields); err != nil {
+		// If JSON parsing fails send back a 422 "unprocessable entity"
+		response := make(map[string]string)
+		response["code"] = strconv.Itoa(StatusUnprocessableEntity)
+		response["reason"] = "Could not parse JSON into a Node object."
+		response["error"] = err.Error()
+		return StatusUnprocessableEntity, response, nil
+	}
+
+	// Update the node with the fields that are updateable.
+	if val, ok := fields["name"]; ok {
+		node.Name = val.(string)
+	}
+
+	if val, ok := fields["address"]; ok {
+		node.Address = val.(string)
+	}
+
+	if val, ok := fields["dns"]; ok {
+		node.DNS = val.(string)
+	}
+
+	// Save the node updates in the database
+	_, dberr := node.Save(app.DB)
+
+	// Handle the creation conditions
+	switch {
+	case dberr != nil:
+		return http.StatusConflict, nil, dberr
+	default:
+		return http.StatusOK, node, nil
+	}
+
 }
 
 // Delete a node from the database
@@ -132,18 +201,33 @@ func (r NodeDetail) Delete(app *App, request *http.Request) (int, interface{}, e
 		return http.StatusInternalServerError, nil, err
 	}
 
-	// Delete the Node with the given ID from the database
-	err = RepoDestroyNode(nodeID)
+	// Query the database for the node by the ID.
+	node, err := GetNode(app.DB, nodeID)
 	if err != nil {
 		return http.StatusNotFound, nil, err
 	}
 
-	// Return the updated node
-	return http.StatusNoContent, nil, nil
+	// Delete the Node from the database
+	deleted, err := node.Delete(app.DB)
+
+	switch {
+	case err != nil:
+		return http.StatusInternalServerError, nil, err
+	case !deleted:
+		return http.StatusConflict, nil, errors.New("Unable to delete node!")
+	default:
+		return http.StatusNoContent, nil, nil
+	}
 }
 
 // Get returns the listing of pings
 func (r PingCollection) Get(app *App, request *http.Request) (int, interface{}, error) {
+	pings, err := FetchPings(app.DB, 10)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
 	return http.StatusOK, pings, nil
 }
 
@@ -168,15 +252,22 @@ func (r PingCollection) Post(app *App, request *http.Request) (int, interface{},
 	if err := json.Unmarshal(body, &ping); err != nil {
 		// If JSON parsing fails send back a 422 "unprocessable entity"
 		response := make(map[string]string)
-		response["code"] = "422"
+		response["code"] = strconv.Itoa(StatusUnprocessableEntity)
 		response["reason"] = "Could not parse JSON into a Ping object."
 		response["error"] = err.Error()
-		return 422, response, nil
+		return StatusUnprocessableEntity, response, nil
 	}
 
-	// Create the node in the database
-	p := RepoCreatePing(ping)
-	return http.StatusCreated, p, nil
+	// Create the ping in the database
+	_, dberr := ping.Save(app.DB)
+
+	// Handle the creation conditions
+	switch {
+	case dberr != nil:
+		return http.StatusConflict, nil, dberr
+	default:
+		return http.StatusCreated, ping, nil
+	}
 }
 
 // Get returns a single ping from the database.
@@ -189,9 +280,11 @@ func (r PingDetail) Get(app *App, request *http.Request) (int, interface{}, erro
 		return http.StatusInternalServerError, nil, err
 	}
 
-	// Query the database for the node by the ID.
-	ping := RepoFindPing(pingID)
-	// TODO: Add ping not found 404 logic
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
 	return http.StatusOK, ping, nil
 }
@@ -206,16 +299,70 @@ func (r PingDetail) Put(app *App, request *http.Request) (int, interface{}, erro
 		return http.StatusInternalServerError, nil, err
 	}
 
-	// Query the database for the node by the ID.
-	ping := RepoFindPing(pingID)
-
-	// TODO: Add ping not found 404 logic
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
 	// Now perform the update ...
-	// TODO: Add the update handling code
+	// Read the data from the request stream (limit the size to 1 MB)
+	body, err := ioutil.ReadAll(io.LimitReader(request.Body, 1048576))
 
-	// Return the updated node
-	return http.StatusOK, ping, nil
+	// Todo return a 413 (entity too large) if it's the limit that's reached.
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Attempt to close the body of the request for reading
+	if err := request.Body.Close(); err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Create a temporary node to  unmarshall data to.
+	var fields map[string]interface{}
+
+	// Unmarshal the Put into a Node struct
+	if err := json.Unmarshal(body, &fields); err != nil {
+		// If JSON parsing fails send back a 422 "unprocessable entity"
+		response := make(map[string]string)
+		response["code"] = strconv.Itoa(StatusUnprocessableEntity)
+		response["reason"] = "Could not parse JSON into a Ping object."
+		response["error"] = err.Error()
+		return StatusUnprocessableEntity, response, nil
+	}
+
+	// Update the node with the fields that are updateable.
+	if val, ok := fields["source"]; ok {
+		ping.Source = val.(int64)
+	}
+
+	if val, ok := fields["target"]; ok {
+		ping.Target = val.(int64)
+	}
+
+	if val, ok := fields["payload"]; ok {
+		ping.Payload = val.(int)
+	}
+
+	if val, ok := fields["latency"]; ok {
+		ping.Latency = val.(float64)
+	}
+
+	if val, ok := fields["timeout"]; ok {
+		ping.Timeout = val.(bool)
+	}
+
+	// Save the node updates in the database
+	_, dberr := ping.Save(app.DB)
+
+	// Handle the creation conditions
+	switch {
+	case dberr != nil:
+		return http.StatusConflict, nil, dberr
+	default:
+		return http.StatusOK, ping, nil
+	}
 }
 
 // Delete a ping from the database
@@ -228,12 +375,21 @@ func (r PingDetail) Delete(app *App, request *http.Request) (int, interface{}, e
 		return http.StatusInternalServerError, nil, err
 	}
 
-	// Delete node with the given ID from the database
-	err = RepoDestroyPing(pingID)
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
 	if err != nil {
 		return http.StatusNotFound, nil, err
 	}
 
-	// Return the updated node
-	return http.StatusNoContent, nil, nil
+	// Delete the Ping from the database
+	deleted, err := ping.Delete(app.DB)
+
+	switch {
+	case err != nil:
+		return http.StatusInternalServerError, nil, err
+	case !deleted:
+		return http.StatusConflict, nil, errors.New("Unable to delete ping!")
+	default:
+		return http.StatusNoContent, nil, nil
+	}
 }

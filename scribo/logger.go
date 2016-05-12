@@ -63,7 +63,7 @@ func (l *responseLogger) Flush() {
 }
 
 // Logger is a decorator for http handlers to record requests in dev format.
-func Logger(inner http.Handler) http.Handler {
+func Logger(app *App, inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -77,7 +77,7 @@ func Logger(inner http.Handler) http.Handler {
 }
 
 // Debugger is a decorator for http handlers to print out the incomming request
-func Debugger(inner http.Handler) http.Handler {
+func Debugger(app *App, inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Print the request
 		data, err := httputil.DumpRequest(r, true)

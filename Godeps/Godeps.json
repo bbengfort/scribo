@@ -7,6 +7,11 @@
 	],
 	"Deps": [
 		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "v1.17.0-16-g7f0ca9a",
+			"Rev": "7f0ca9a34958d6702ac8f38530d19001fa5b1560"
+		},
+		{
 			"ImportPath": "github.com/gorilla/context",
 			"Comment": "v1.1-2-ga8d44e7",
 			"Rev": "a8d44e7d8e4d532b6a27a02dd82abb31cc1b01bd"
@@ -15,6 +20,16 @@
 			"ImportPath": "github.com/gorilla/mux",
 			"Comment": "v1.1-7-g9c19ed5",
 			"Rev": "9c19ed558d5df4da88e2ade9c8940d742aef0e7e"
+		},
+		{
+			"ImportPath": "github.com/jackc/pgx",
+			"Comment": "v2.8.1-24-g90f22c1",
+			"Rev": "90f22c17175fab5f9ad48abba5a18f5f2b5c9d2e"
+		},
+		{
+			"ImportPath": "github.com/jackc/pgx/stdlib",
+			"Comment": "v2.8.1-24-g90f22c1",
+			"Rev": "90f22c17175fab5f9ad48abba5a18f5f2b5c9d2e"
 		},
 		{
 			"ImportPath": "github.com/onsi/ginkgo",
