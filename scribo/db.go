@@ -1,11 +1,32 @@
 package scribo
 
-import "fmt"
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	"os"
+
+	// Loads the driver for database/sql
+	_ "github.com/jackc/pgx/stdlib"
+)
 
 var nextNodeID uint64
 var nextPingID uint64
 var nodes Nodes
 var pings Pings
+
+// ConnectDB establishes a connection to the PostgreSQL database
+func ConnectDB() *sql.DB {
+	dbURL := os.Getenv("DATABASE_URL")
+	fmt.Println(dbURL)
+
+	db, err := sql.Open("pgx", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return db
+}
 
 func init() {
 	RepoCreateNode(Node{Name: "alpha", Address: "127.0.0.11"})
