@@ -150,6 +150,10 @@
 			"ImportPath": "github.com/onsi/gomega/types",
 			"Comment": "v1.0-75-g0fe2044",
 			"Rev": "0fe204460da2c8fa1babcaac196e694de8f1aaa1"
+		},
+		{
+			"ImportPath": "github.com/tent/hawk-go",
+			"Rev": "8bd4a9f3b4cf4a535303c3f5ce3811475764139c"
 		}
 	]
 }

@@ -84,7 +84,7 @@ func CreateResourceRoute(resource Resource, name string, pattern string) Route {
 		}
 	}
 
-	return Route{name, []string{GET, POST, PUT, DELETE}, pattern, handler}
+	return Route{name, []string{GET, POST, PUT, DELETE}, pattern, handler, true}
 }
 
 type (

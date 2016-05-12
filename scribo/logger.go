@@ -3,6 +3,7 @@ package scribo
 import (
 	"log"
 	"net/http"
+	"net/http/httputil"
 	"time"
 )
 
@@ -61,8 +62,8 @@ func (l *responseLogger) Flush() {
 	}
 }
 
-// A decorator for http handlers to record log messages on request.
-func logger(inner http.Handler, name string) http.Handler {
+// Logger is a decorator for http handlers to record requests in dev format.
+func Logger(inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -72,5 +73,21 @@ func logger(inner http.Handler, name string) http.Handler {
 		log.Printf(dev,
 			r.Method, r.RequestURI, lw.Status(), time.Since(start), lw.Size(),
 		)
+	})
+}
+
+// Debugger is a decorator for http handlers to print out the incomming request
+func Debugger(inner http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Print the request
+		data, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			log.Fatalf(err.Error())
+		} else {
+			log.Printf("%s\n", data)
+		}
+
+		// Now serve the request forward
+		inner.ServeHTTP(w, r)
 	})
 }
