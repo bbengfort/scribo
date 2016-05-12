@@ -27,6 +27,18 @@ func RepoFindNode(id uint64) Node {
 	return Node{}
 }
 
+// RepoFindPing searches for a node item by an id.
+func RepoFindPing(id uint64) Ping {
+	for _, t := range pings {
+		if t.ID == id {
+			return t
+		}
+	}
+
+	// Return empty Node if not found
+	return Ping{}
+}
+
 // RepoCreateNode inserts a node into the current nodes list
 func RepoCreateNode(n Node) Node {
 	nextNodeID++
@@ -43,7 +55,7 @@ func RepoCreatePing(p Ping) Ping {
 	return p
 }
 
-// RepoDestroyNode deletes the todo item at that index.
+// RepoDestroyNode deletes the ping with the given ID.
 func RepoDestroyNode(id uint64) error {
 	for i, t := range nodes {
 		if t.ID == id {
@@ -52,5 +64,17 @@ func RepoDestroyNode(id uint64) error {
 		}
 	}
 
-	return fmt.Errorf("Could not find Todo with id of %d to delete", id)
+	return fmt.Errorf("Could not find Node with id of %d to delete", id)
+}
+
+// RepoDestroyPing deletes the ping with the given ID.
+func RepoDestroyPing(id uint64) error {
+	for i, t := range pings {
+		if t.ID == id {
+			nodes = append(nodes[:i], nodes[i+1:]...)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Could not find Ping with id of %d to delete", id)
 }

@@ -2,49 +2,26 @@ package scribo
 
 import "net/http"
 
+// HandlerFunc is wrapper for creating handler functions with app callbacks.
+type HandlerFunc func(app *App) http.HandlerFunc
+
 // Route allows easy definition of our API
 type Route struct {
 	Name    string
-	Method  string
+	Methods []string
 	Pattern string
-	Handler http.HandlerFunc
+	Handler HandlerFunc
 }
 
-// Routes defines the complete route set for the API
+// Routes defines the complete route set for various non-API handlers.
 type Routes []Route
 
 var routes = Routes{
 	Route{
-		"Index", "GET", "/", Index,
+		"Index", []string{GET}, "/", Index,
 	},
-	Route{
-		"NodeList", "GET", "/nodes", NodeList,
-	},
-	Route{
-		"NodeCreate", "POST", "/nodes", NodeCreate,
-	},
-	Route{
-		"NodeDetail", "GET", "/nodes/{ID}", NodeDetail,
-	},
-	Route{
-		"NodeUpdate", "PUT", "/nodes/{ID}", NodeUpdate,
-	},
-	Route{
-		"NodeDelete", "DELETE", "/nodes/{ID}", NodeDelete,
-	},
-	Route{
-		"PingList", "GET", "/pings", PingList,
-	},
-	Route{
-		"PingCreate", "POST", "/pings", PingCreate,
-	},
-	Route{
-		"PingDetail", "GET", "/pings/{ID}", PingDetail,
-	},
-	Route{
-		"PingUpdate", "PUT", "/pings/{ID}", PingUpdate,
-	},
-	Route{
-		"PingDelete", "DELETE", "/pings/{ID}", PingDelete,
-	},
+	CreateResourceRoute(NodeCollection{}, "NodeCollection", "/nodes"),
+	CreateResourceRoute(NodeDetail{}, "NodeDetail", "/nodes/{ID}"),
+	CreateResourceRoute(PingCollection{}, "PingCollection", "/pings"),
+	CreateResourceRoute(PingDetail{}, "PingDetail", "/pings/{ID}"),
 }

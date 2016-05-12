@@ -30,7 +30,7 @@ And the tests can be run as follows:
 
     $ ginkgo -r -v ./scribo/...
 
-Hopefully that's enough to get you up and running! 
+Hopefully that's enough to get you up and running!
 
 ## About
 
@@ -64,6 +64,10 @@ When doing a pull request, keep in mind that the project is set up in a typical 
 4. Repeat. Releases will be routinely pushed into master via release branches, then deployed to the server.
 
 Note that no pull requests into master will be considered; only those that pull into develop.
+
+### Throughput
+
+[![Throughput Graph](https://graphs.waffle.io/bbengfort/scribo/throughput.svg)](https://waffle.io/bbengfort/scribo/metrics/throughput)
 
 ## Contributors
 
