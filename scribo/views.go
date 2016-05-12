@@ -48,6 +48,12 @@ type (
 
 // Get returns the listing of nodes
 func (r NodeCollection) Get(app *App, request *http.Request) (int, interface{}, error) {
+	nodes, err := FetchNodes(app.DB, 10)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
 	return http.StatusOK, nodes, nil
 }
 
@@ -79,8 +85,9 @@ func (r NodeCollection) Post(app *App, request *http.Request) (int, interface{},
 	}
 
 	// Create the node in the database
-	n := RepoCreateNode(node)
-	return http.StatusCreated, n, nil
+	// TODO: implement node.Create
+	// node.Create()
+	return http.StatusCreated, node, nil
 }
 
 // Get returns a single node from the database.
@@ -94,8 +101,10 @@ func (r NodeDetail) Get(app *App, request *http.Request) (int, interface{}, erro
 	}
 
 	// Query the database for the node by the ID.
-	node := RepoFindNode(nodeID)
-	// TODO: Add node not found 404 logic
+	node, err := GetNode(app.DB, nodeID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
 	return http.StatusOK, node, nil
 }
@@ -111,12 +120,14 @@ func (r NodeDetail) Put(app *App, request *http.Request) (int, interface{}, erro
 	}
 
 	// Query the database for the node by the ID.
-	node := RepoFindNode(nodeID)
-
-	// TODO: Add node not found 404 logic
+	node, err := GetNode(app.DB, nodeID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
 	// Now perform the update ...
 	// TODO: Add the update handling code
+	// node.Save()
 
 	// Return the updated node
 	return http.StatusOK, node, nil
@@ -132,18 +143,29 @@ func (r NodeDetail) Delete(app *App, request *http.Request) (int, interface{}, e
 		return http.StatusInternalServerError, nil, err
 	}
 
-	// Delete the Node with the given ID from the database
-	err = RepoDestroyNode(nodeID)
+	// Query the database for the node by the ID.
+	node, err := GetNode(app.DB, nodeID)
 	if err != nil {
 		return http.StatusNotFound, nil, err
 	}
 
+	// Delete the Node from the database
+	// TODO: implement node.Delete
+	// node.Delete()
+
 	// Return the updated node
-	return http.StatusNoContent, nil, nil
+	// return http.StatusNoContent, nil, nil
+	return http.StatusNoContent, node, nil
 }
 
 // Get returns the listing of pings
 func (r PingCollection) Get(app *App, request *http.Request) (int, interface{}, error) {
+	pings, err := FetchPings(app.DB, 10)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
 	return http.StatusOK, pings, nil
 }
 
@@ -175,8 +197,10 @@ func (r PingCollection) Post(app *App, request *http.Request) (int, interface{},
 	}
 
 	// Create the node in the database
-	p := RepoCreatePing(ping)
-	return http.StatusCreated, p, nil
+	// TODO: implement ping.Create
+	// ping.Create()
+
+	return http.StatusCreated, ping, nil
 }
 
 // Get returns a single ping from the database.
@@ -189,9 +213,11 @@ func (r PingDetail) Get(app *App, request *http.Request) (int, interface{}, erro
 		return http.StatusInternalServerError, nil, err
 	}
 
-	// Query the database for the node by the ID.
-	ping := RepoFindPing(pingID)
-	// TODO: Add ping not found 404 logic
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
 	return http.StatusOK, ping, nil
 }
@@ -206,13 +232,15 @@ func (r PingDetail) Put(app *App, request *http.Request) (int, interface{}, erro
 		return http.StatusInternalServerError, nil, err
 	}
 
-	// Query the database for the node by the ID.
-	ping := RepoFindPing(pingID)
-
-	// TODO: Add ping not found 404 logic
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
 	// Now perform the update ...
 	// TODO: Add the update handling code
+	// ping.Save()
 
 	// Return the updated node
 	return http.StatusOK, ping, nil
@@ -228,12 +256,17 @@ func (r PingDetail) Delete(app *App, request *http.Request) (int, interface{}, e
 		return http.StatusInternalServerError, nil, err
 	}
 
-	// Delete node with the given ID from the database
-	err = RepoDestroyPing(pingID)
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
 	if err != nil {
 		return http.StatusNotFound, nil, err
 	}
 
+	// Delete the Ping from the database
+	// TODO: implement ping.Delete
+	// ping.Delete()
+
 	// Return the updated node
-	return http.StatusNoContent, nil, nil
+	return http.StatusNoContent, ping, nil
+	// return http.StatusNoContent, nil, nil
 }

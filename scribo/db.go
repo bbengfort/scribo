@@ -10,11 +10,6 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 )
 
-var nextNodeID uint64
-var nextPingID uint64
-var nodes Nodes
-var pings Pings
-
 // ConnectDB establishes a connection to the PostgreSQL database
 func ConnectDB() *sql.DB {
 	dbURL := os.Getenv("DATABASE_URL")
@@ -28,74 +23,90 @@ func ConnectDB() *sql.DB {
 	return db
 }
 
-func init() {
-	RepoCreateNode(Node{Name: "alpha", Address: "127.0.0.11"})
-	RepoCreateNode(Node{Name: "bravo", Address: "127.0.0.10"})
-	RepoCreatePing(Ping{Source: 1, Target: 2, Latency: 11.142, Payload: 54})
-	RepoCreatePing(Ping{Source: 1, Target: 2, Latency: 8.218, Payload: 54})
-	RepoCreatePing(Ping{Source: 2, Target: 1, Timeout: true, Payload: 54})
-}
+// GetNode by ID, attempts to return the node or an error otherwise.
+func GetNode(db *sql.DB, id uint64) (Node, error) {
+	var n Node
 
-// RepoFindNode searches for a node item by an id.
-func RepoFindNode(id uint64) Node {
-	for _, t := range nodes {
-		if t.ID == id {
-			return t
-		}
+	row := db.QueryRow("SELECT * FROM nodes WHERE id = $1", id)
+	err := row.Scan(&n.ID, &n.Name, &n.Address, &n.DNS, &n.Key, &n.Created, &n.Updated)
+
+	if err != nil {
+		return Node{}, err
 	}
 
-	// Return empty Node if not found
-	return Node{}
+	return n, nil
 }
 
-// RepoFindPing searches for a node item by an id.
-func RepoFindPing(id uint64) Ping {
-	for _, t := range pings {
-		if t.ID == id {
-			return t
-		}
+// GetNodeByName attempts to return the node from a name or an error otherwise.
+func GetNodeByName(db *sql.DB, name string) (Node, error) {
+	var n Node
+
+	row := db.QueryRow("SELECT * FROM nodes WHERE name = $1", name)
+	err := row.Scan(&n.ID, &n.Name, &n.Address, &n.DNS, &n.Key, &n.Created, &n.Updated)
+
+	if err != nil {
+		return Node{}, err
 	}
 
-	// Return empty Node if not found
-	return Ping{}
+	return n, nil
 }
 
-// RepoCreateNode inserts a node into the current nodes list
-func RepoCreateNode(n Node) Node {
-	nextNodeID++
-	n.ID = nextNodeID
-	nodes = append(nodes, n)
-	return n
-}
+// FetchNodes returns a collection of nodes, ordered by the updated timestamp.
+// This function expects you to limit the size of the collection by specifying
+// the maximum number of nodes to return in the Nodes collection.
+func FetchNodes(db *sql.DB, limit int) (Nodes, error) {
+	var nodes Nodes
 
-// RepoCreatePing inserts a ping into the current pings list
-func RepoCreatePing(p Ping) Ping {
-	nextPingID++
-	p.ID = nextPingID
-	pings = append(pings, p)
-	return p
-}
-
-// RepoDestroyNode deletes the ping with the given ID.
-func RepoDestroyNode(id uint64) error {
-	for i, t := range nodes {
-		if t.ID == id {
-			nodes = append(nodes[:i], nodes[i+1:]...)
-			return nil
-		}
+	rows, err := db.Query("SELECT * FROM nodes ORDER BY updated DESC LIMIT $1", limit)
+	if err != nil {
+		return nil, err
 	}
 
-	return fmt.Errorf("Could not find Node with id of %d to delete", id)
-}
-
-// RepoDestroyPing deletes the ping with the given ID.
-func RepoDestroyPing(id uint64) error {
-	for i, t := range pings {
-		if t.ID == id {
-			nodes = append(nodes[:i], nodes[i+1:]...)
-			return nil
+	for rows.Next() {
+		var n Node
+		if err := rows.Scan(&n.ID, &n.Name, &n.Address, &n.DNS, &n.Key, &n.Created, &n.Updated); err != nil {
+			return nil, err
 		}
+
+		nodes = append(nodes, n)
 	}
 
-	return fmt.Errorf("Could not find Ping with id of %d to delete", id)
+	return nodes, nil
+}
+
+// GetPing by ID, attempts to return the ping or an error otherwise.
+func GetPing(db *sql.DB, id uint64) (Ping, error) {
+	var p Ping
+
+	row := db.QueryRow("SELECT * FROM pings WHERE id = $1", id)
+	err := row.Scan(&p.ID, &p.Source, &p.Target, &p.Payload, &p.Latency, &p.Timeout, &p.Created, &p.Updated)
+
+	if err != nil {
+		return Ping{}, err
+	}
+
+	return p, nil
+}
+
+// FetchPings returns a collection of pings, ordered by the created timestamp.
+// This function expects you to limit the size of the collection by specifying
+// the maximum number of pings to return in the Pings collection.
+func FetchPings(db *sql.DB, limit int) (Pings, error) {
+	var pings Pings
+
+	rows, err := db.Query("SELECT * FROM pings ORDER BY created DESC LIMIT $1", limit)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var p Ping
+		if err := rows.Scan(&p.ID, &p.Source, &p.Target, &p.Payload, &p.Latency, &p.Timeout, &p.Created, &p.Updated); err != nil {
+			return nil, err
+		}
+
+		pings = append(pings, p)
+	}
+
+	return pings, nil
 }
