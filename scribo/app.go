@@ -2,6 +2,7 @@ package scribo
 
 import (
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -51,8 +52,15 @@ func CreateApp() *App {
 }
 
 // Run the web application via the associated router.
-func (app *App) Run(addr string) {
-	log.Printf("Starting server at http://%s (use CTRL+C to quit)", addr)
+func (app *App) Run(port int) {
+	addr := fmt.Sprintf(":%d", port)
+
+	name, err := os.Hostname()
+	if err != nil {
+		name = "localhost"
+	}
+
+	log.Printf("Starting server at http://%s:%d (use CTRL+C to quit)", name, port)
 	log.Fatal(http.ListenAndServe(addr, app.Router))
 }
 
