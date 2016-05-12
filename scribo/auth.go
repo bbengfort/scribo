@@ -2,6 +2,7 @@ package scribo
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -14,25 +15,41 @@ import (
 )
 
 // Helper function that looks up a Node's credentials by their name.
-func getCredentials(c *hawk.Credentials) error {
-	if c.ID == "benjamin" {
-		c.Key = "werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn"
-		c.Hash = sha256.New
-		return nil
+func getCredentials(app *App, c *hawk.Credentials) error {
+	var key string
+
+	// Lookup node by name (the ID specified in the request)
+	query := "SELECT key FROM nodes WHERE name=$1"
+	row := app.DB.QueryRow(query, c.ID)
+	err := row.Scan(&key)
+
+	if err != nil {
+
+		if err == sql.ErrNoRows {
+			err := new(hawk.CredentialError)
+			err.Type = hawk.UnknownID
+			err.Credentials = c
+
+			return err
+		}
+
+		return err
 	}
 
-	err := new(hawk.CredentialError)
-	err.Type = hawk.UnknownID
-	err.Credentials = c
-
-	return err
+	// Otherwise we're good to go! Update the Credentials
+	c.Key = key
+	c.Hash = sha256.New
+	return nil
 }
 
 // Authenticate is decorator that implements Hawk authorization.
-func Authenticate(inner http.Handler) http.Handler {
+func Authenticate(app *App, inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		auth, err := hawk.NewAuthFromRequest(r, getCredentials, nil)
+		// Get the authentication from the request, using a closure.
+		auth, err := hawk.NewAuthFromRequest(r, func(c *hawk.Credentials) error {
+			return getCredentials(app, c)
+		}, nil)
 
 		// If the parsing didn't fail, check to see if auth is valid.
 		if err == nil {
