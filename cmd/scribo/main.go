@@ -2,25 +2,39 @@ package main
 
 import (
 	"os"
-	"strconv"
 
 	"github.com/bbengfort/scribo/scribo"
+	"github.com/codegangsta/cli"
 )
 
 func main() {
-	var port int
-	var err error
-	portEnv := os.Getenv("PORT")
+	// Instantiate the command line application
+	app := cli.NewApp()
+	app.Name = "scribo"
+	app.Usage = "runs the scribo web application and API"
+	app.Version = scribo.Version
+	app.Author = "Benjamin Bengfort"
+	app.Email = "benjamin@bengfort.com"
+	app.Action = runScriboApp
 
-	if portEnv == "" {
-		port = 5356
-	} else {
-		port, err = strconv.Atoi(portEnv)
-		if err != nil {
-			panic(err)
-		}
+	// Create the flags
+	var port int
+
+	app.Flags = []cli.Flag{
+		cli.IntFlag{
+			Name:        "port",
+			Value:       5356,
+			Usage:       "the PORT to run the HTTP server on",
+			EnvVar:      "PORT",
+			Destination: &port,
+		},
 	}
 
-	app := scribo.CreateApp()
-	app.Run(port)
+	// Run the command line application
+	app.Run(os.Args)
+}
+
+func runScriboApp(ctx *cli.Context) {
+	server := scribo.CreateApp()
+	server.Run(ctx.Int("port"))
 }

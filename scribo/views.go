@@ -107,7 +107,7 @@ func (r NodeCollection) Post(app *App, request *http.Request) (int, interface{},
 func (r NodeDetail) Get(app *App, request *http.Request) (int, interface{}, error) {
 	// Parse the variables from the URL route.
 	vars := mux.Vars(request)
-	nodeID, err := strconv.ParseUint(vars["ID"], 0, 64)
+	nodeID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, err
@@ -126,7 +126,7 @@ func (r NodeDetail) Get(app *App, request *http.Request) (int, interface{}, erro
 func (r NodeDetail) Put(app *App, request *http.Request) (int, interface{}, error) {
 	// Parse the variables from the URL route.
 	vars := mux.Vars(request)
-	nodeID, err := strconv.ParseUint(vars["ID"], 0, 64)
+	nodeID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, err
@@ -195,7 +195,7 @@ func (r NodeDetail) Put(app *App, request *http.Request) (int, interface{}, erro
 func (r NodeDetail) Delete(app *App, request *http.Request) (int, interface{}, error) {
 	// Parse the variables from the URL route.
 	vars := mux.Vars(request)
-	nodeID, err := strconv.ParseUint(vars["ID"], 0, 64)
+	nodeID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, err
@@ -274,7 +274,7 @@ func (r PingCollection) Post(app *App, request *http.Request) (int, interface{},
 func (r PingDetail) Get(app *App, request *http.Request) (int, interface{}, error) {
 	// Parse the variables from the URL route.
 	vars := mux.Vars(request)
-	pingID, err := strconv.ParseUint(vars["ID"], 0, 64)
+	pingID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, err
@@ -293,7 +293,7 @@ func (r PingDetail) Get(app *App, request *http.Request) (int, interface{}, erro
 func (r PingDetail) Put(app *App, request *http.Request) (int, interface{}, error) {
 	// Parse the variables from the URL route.
 	vars := mux.Vars(request)
-	pingID, err := strconv.ParseUint(vars["ID"], 0, 64)
+	pingID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, err
@@ -369,7 +369,7 @@ func (r PingDetail) Put(app *App, request *http.Request) (int, interface{}, erro
 func (r PingDetail) Delete(app *App, request *http.Request) (int, interface{}, error) {
 	// Parse the variables from the URL route.
 	vars := mux.Vars(request)
-	pingID, err := strconv.ParseUint(vars["ID"], 0, 64)
+	pingID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
 	if err != nil {
 		return http.StatusInternalServerError, nil, err
