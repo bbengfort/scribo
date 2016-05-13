@@ -24,15 +24,34 @@ This will fetch the Scribo packages and build them along with the `scribo` comma
 
     $ godep restore
 
+You need to create some environment variables for `scribo` to connect to the database and run, as well as for other functions like generating keys. I usually keep mine in a `.env` file in my local root (ignored by git). Future releases will automatically load the environment from this file. The variables are as follows:
+
+```bash
+export PORT=8080
+export DATABASE_URL=postgresql://localhost/scribo
+export TEST_DATABASE_URL=postgresql://localhost/scribo-test
+export SCRIBO_SECRET=theeaglefliesatmidnight
+```
+
+You can then migrate the database:
+
+    $ scribo-migrate --all
+
 The web server can then be run as follows:
 
-    $ go run cmd/scribo/main.go
+    $ scribo
 
 And the tests can be run as follows:
 
-    $ ginkgo -r -v ./scribo/...
+    $ ginkgo -r -v
 
-Hopefully that's enough to get you up and running!
+Finally to register a node for testing the API you an use the following command:
+
+    $ scribo-register --addr 127.0.0.1 --dns test.dyndns.net testnode
+
+The output of this command is the key that you need to use to sign HAWK requests to the API. An example of how to create a client that connects to the API is here: [scribo-client.go](https://gist.github.com/bbengfort/6f156f752435619096bd4770ebea19cb).
+
+Remember to rebuild the commands as you're coding or to `go run` them directly.
 
 ## About
 

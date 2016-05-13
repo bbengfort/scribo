@@ -1,4 +1,13 @@
-// Package scribo provides the primary functionality of the Scribo web API.
+// Package scribo provides the library code for a lightweight, fast RESTful microservice.
+//
+// This service is an uptime collection mechanism associated with the Mora project. Mora contains three pieces: Oro and Scio which ping each other to measure latency inside of the network, then report those pings to Scribo, which is simply a RESTful API designed to record experimental data.
+//
+// The package is implemented by three commands: scribo, scribo-migrate, and scribo-register. To run the application locally:
+//
+//     $ scribo-migrate --all
+//     $ scribo -port 8080
+//
+// So long as you have environment variables configured correctly, the database should be created and the web application will run. See the README for more information on getting started.
 package scribo
 
 import (
@@ -38,6 +47,7 @@ func CreateApp() *App {
 	app.DB = ConnectDB()
 
 	// Set the static and template directories
+	// BUG(bbengfort): relative import for static/template directories needs to be configured rather than guessed.
 	root, _ := os.Getwd()
 	app.StaticDir = path.Join(root, "assets")
 	app.TemplateDir = path.Join(root, "templates")

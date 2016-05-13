@@ -7,23 +7,17 @@ import (
 	"strconv"
 )
 
+// Magic strings referring to HTTP methods managed by the Resource.
 const (
-	// GET refers to the HTTP GET method
-	GET = "GET"
-
-	// POST refers to the HTTP POST method
-	POST = "POST"
-
-	// PUT refers to the HTTP PUT method
-	PUT = "PUT"
-
-	// DELETE refers to the HTTP DELETE method
+	GET    = "GET"
+	POST   = "POST"
+	PUT    = "PUT"
 	DELETE = "DELETE"
+)
 
-	// CTKEY is the content type key to add to the header.
-	CTKEY = "Content-Type"
-
-	// CTJSON is the content type for responses
+// Default header keys and values that are sent by Resources.
+const (
+	CTKEY  = "Content-Type"
 	CTJSON = "application/json;charset=UTF-8"
 )
 
