@@ -4,6 +4,9 @@ go:
     - 1.5
     - 1.6
 
+services:
+    - postgresql
+
 before_install:
     - go get github.com/tools/godep
 
@@ -12,9 +15,20 @@ install:
     - go get -v github.com/onsi/gomega
     - godep restore
 
+before_script:
+    - psql -c 'CREATE DATABASE "scribo-test";' -U postgres
+
 script: ginkgo -r -v
+
+env:
+    global:
+        - TEST_DATABASE_URL=postgres://localhost/scribo-test
+        - PORT=8000
+        - SCRIBO_SECRET=supersecretsaucykey
 
 notifications:
     email:
+        recipients:
+            - benjamin@bengfort.com
         on_success: change
         on_failure: always

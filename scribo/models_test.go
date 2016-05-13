@@ -10,6 +10,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+// Note that the any model methods that require the database are in the
+// db_test module that has the database connection runner, etc.
 var _ = Describe("Models", func() {
 
 	Describe("Nodes", func() {

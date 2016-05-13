@@ -2,7 +2,6 @@ package scribo
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 	"os"
 
@@ -13,7 +12,7 @@ import (
 // ConnectDB establishes a connection to the PostgreSQL database
 func ConnectDB() *sql.DB {
 	dbURL := os.Getenv("DATABASE_URL")
-	fmt.Println(dbURL)
+	log.Printf("Connecting to database at %s", dbURL)
 
 	db, err := sql.Open("pgx", dbURL)
 	if err != nil {
@@ -24,7 +23,7 @@ func ConnectDB() *sql.DB {
 }
 
 // GetNode by ID, attempts to return the node or an error otherwise.
-func GetNode(db *sql.DB, id uint64) (Node, error) {
+func GetNode(db *sql.DB, id int64) (Node, error) {
 	var n Node
 
 	row := db.QueryRow("SELECT * FROM nodes WHERE id = $1", id)
@@ -58,6 +57,26 @@ func GetNodeByName(db *sql.DB, name string) (Node, error) {
 
 }
 
+// NodeExists tests if the given ID is associated with a node.
+func NodeExists(db *sql.DB, id int64) (bool, error) {
+	var exists bool
+	query := "select exists(select 1 from nodes where id=$1)"
+	row := db.QueryRow(query, id)
+	err := row.Scan(&exists)
+
+	return exists, err
+}
+
+// NodeExistsByName tests if the given name is associated with a node.
+func NodeExistsByName(db *sql.DB, name string) (bool, error) {
+	var exists bool
+	query := "select exists(select 1 from nodes where name=$1)"
+	row := db.QueryRow(query, name)
+	err := row.Scan(&exists)
+
+	return exists, err
+}
+
 // FetchNodes returns a collection of nodes, ordered by the updated timestamp.
 // This function expects you to limit the size of the collection by specifying
 // the maximum number of nodes to return in the Nodes collection.
@@ -83,7 +102,7 @@ func FetchNodes(db *sql.DB, limit int) (Nodes, error) {
 }
 
 // GetPing by ID, attempts to return the ping or an error otherwise.
-func GetPing(db *sql.DB, id uint64) (Ping, error) {
+func GetPing(db *sql.DB, id int64) (Ping, error) {
 	var p Ping
 
 	row := db.QueryRow("SELECT * FROM pings WHERE id = $1", id)
@@ -98,6 +117,16 @@ func GetPing(db *sql.DB, id uint64) (Ping, error) {
 		return p, nil
 	}
 
+}
+
+// PingExists tests if the given ID is associated with a ping.
+func PingExists(db *sql.DB, id int64) (bool, error) {
+	var exists bool
+	query := "select exists(select 1 from pings where id=$1)"
+	row := db.QueryRow(query, id)
+	err := row.Scan(&exists)
+
+	return exists, err
 }
 
 // FetchPings returns a collection of pings, ordered by the created timestamp.
