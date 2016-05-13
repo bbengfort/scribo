@@ -1,6 +1,7 @@
 # Scribo
 
 [![Build Status](https://travis-ci.org/bbengfort/scribo.svg?branch=master)](https://travis-ci.org/bbengfort/scribo)
+[![Coverage Status](https://coveralls.io/repos/github/bbengfort/scribo/badge.svg?branch=master)](https://coveralls.io/github/bbengfort/scribo?branch=master)
 [![GoDoc Reference](https://godoc.org/github.com/bbengfort/scribo/scribo?status.svg)](https://godoc.org/github.com/bbengfort/scribo/scribo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bbengfort/scribo)](https://goreportcard.com/report/github.com/bbengfort/scribo)
 [![Stories in Ready](https://badge.waffle.io/bbengfort/scribo.png?label=ready&title=Ready)](https://waffle.io/bbengfort/scribo)
