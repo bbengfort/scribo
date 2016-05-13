@@ -13,18 +13,23 @@ before_install:
 install:
     - go get -v github.com/onsi/ginkgo/ginkgo
     - go get -v github.com/onsi/gomega
+    - go get github.com/mattn/goveralls
     - godep restore
 
 before_script:
     - psql -c 'CREATE DATABASE "scribo-test";' -U postgres
 
-script: ginkgo -r -v
+script: ginkgo -r -v -coverpkg=github.com/bbengfort/scribo/scribo
+
+after_script:
+    - goveralls -coverprofile=scribo/scribo.coverprofile -service=travis-ci -repotoken $COVERALLS_TOKEN
 
 env:
     global:
         - TEST_DATABASE_URL=postgres://localhost/scribo-test
         - PORT=8000
         - SCRIBO_SECRET=supersecretsaucykey
+        - secure: "j9IXhQYszCfOdSylfka9n5pz76p6w8IbN0q9vYKj6xTq+6zQrNqIz7pypSy8T7epCXUzuYN0OXJ+pWkoO12bykWo1QGL8DEYZSzZ+xYghi97GZwUkHzsMGPZsLPr3DvozgS1ljXlGYU7v8TTGYHoywgAq2O9JpjRh9kj+fVtLMbjmEBTq1Vdyl7xn6khWikQm4YqYuvJjibicZ+PylHlg/vTrDj+qqpmwIQiSF7KKqCqDAGbrbxQaiNDG/zXFZFmKPQJXZnlQBWIn8APNAe8kPo65k+yu3RzbHhYQH45SsqEfI2moEIjMh54w36JL1AeQI55zEtTaxULzPC0WEMKtUXFIe2eUiFYIMt871ocaTZsjbsRL+f/jOwjK//R5fOHyW5tYAS02mQFPUnd6zGQw48jxLO8Jc+QPzoGWOvYHmqlSp1kEuXWMXMqXCke6l71UxJauHO8VaBo7oFdkXarez6CO97bTJEOmVZDFTiyqq7cHFOVNsAMvIkwd2sD0SoEEE5Pp2DYDlr6fgPCq2LeKFnWgNuc4ovVW+honq0FemdUaarfAib0nRiD3nAR+LazaEEeFJDwQIurV3/cqgwifk4xO3KdV/faGYPcP+qoB0CuY+0Rx4y6N0ozSIPVuF40VPfykKoHbkaOuEqMRtlTGnJVLuioqIK3hJ1JUE6O9G0="
 
 notifications:
     email:

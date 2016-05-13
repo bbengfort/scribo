@@ -1,6 +1,7 @@
 # Scribo
 
 [![Build Status](https://travis-ci.org/bbengfort/scribo.svg?branch=master)](https://travis-ci.org/bbengfort/scribo)
+[![GoDoc Reference](https://godoc.org/github.com/bbengfort/scribo/scribo?status.svg)](https://godoc.org/github.com/bbengfort/scribo/scribo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bbengfort/scribo)](https://goreportcard.com/report/github.com/bbengfort/scribo)
 [![Stories in Ready](https://badge.waffle.io/bbengfort/scribo.png?label=ready&title=Ready)](https://waffle.io/bbengfort/scribo)
 
@@ -35,6 +36,16 @@ Hopefully that's enough to get you up and running!
 ## About
 
 Mora (delay, waiting) observes ping latencies between nodes in a wide area, heterogenous, user-oriented network by running a local service that pings other nodes in the network. Oro (speak) is the name of the mobile application, and Scio (understand) is the name of the desktop client. The ping data is collected by a centralized RESTful microservice called Scribo (record). This data will be used for scientific research concerning distributed systems.
+
+### Documentation
+
+[Documenting go code correctly](https://blog.golang.org/godoc-documenting-go-code) is vital, because [godoc.org] will automatically [pull package documentation](https://godoc.org/-/about) from GitHub.
+
+To view the documentation locally before pushing:
+
+    godoc -http=:6060
+
+This will provide a dashboard for the Go code on your local machine. You can find documentation for this package here: [godoc.org: package scribo](https://godoc.org/github.com/bbengfort/scribo/scribo).
 
 ### Contributing
 
@@ -86,6 +97,14 @@ Thank you for all your help contributing to make Scribo a great project!
 The release versions that are tagged in Git. You can see the tags through the GitHub web application and download the tarball of the version you'd like.
 
 The versioning uses a three part version system, "a.b.c" - "a" represents a major release that may not be backwards compatible. "b" is incremented on minor releases that may contain extra features, but are backwards compatible. "c" releases are bug fixes or other micro changes that developers should feel free to immediately update to.
+
+## Version 1.0
+
+* **tag**: [v1.0](https://github.com/bbengfort/scribo/releases/tag/v1.0)
+* **deployment**: Thursday, May 12, 2016
+* **commit**: [215ac45](https://github.com/bbengfort/scribo/commit/215ac459b67e5709e1eb20b0bdb07b63b9ce5f32)
+
+This build is the first working version of the API that provides an authenticated service for managing nodes and latency reports (pings) in the Mora network. The API is backed by a PostgreSQL database, requires HAWK authentication for access, and exposes a simple single page dashboard for viewing the current status. There are also  helper commands for migrating the database as well as registering nodes via the command line (there is no current way to register through the API). This version of the app is deployed to Heroku and can be found at [https://mora-scribo.herokuapp.com/](https://mora-scribo.herokuapp.com/), though we'll probably update this to a more appropriate domain soon.
 
 ## Version 0.1
 

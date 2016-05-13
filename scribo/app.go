@@ -1,3 +1,4 @@
+// Package scribo provides the primary functionality of the Scribo web API.
 package scribo
 
 import (

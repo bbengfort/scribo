@@ -1,3 +1,4 @@
+// A command that allows the registration of Mora nodes on the network
 package main
 
 import (

@@ -1,3 +1,4 @@
+// A command that runs database migrations for Scribo
 package main
 
 import (
