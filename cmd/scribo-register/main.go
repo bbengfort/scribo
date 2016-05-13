@@ -8,15 +8,13 @@ import (
 	"github.com/codegangsta/cli"
 )
 
-const version = "1.0"
-
 func main() {
 
 	// Instantiate the command line application
 	app := cli.NewApp()
 	app.Name = "scribo-register"
 	app.Usage = "register a Node to Scribo and receive a Key for authentication."
-	app.Version = version
+	app.Version = scribo.Version
 	app.Author = "Benjamin Bengfort"
 	app.Email = "benjamin@bengfort.com"
 	app.Action = registerUser

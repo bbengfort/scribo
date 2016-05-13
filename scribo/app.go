@@ -14,6 +14,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Version specifies what version of Scribo we're on.
+const Version = "0.1"
+
 // App defines the complete structure of a web application including a
 // router for multiplexing, storages, assets, templates, cookies, and more.
 // This should be the primary interface for working with Scribo.

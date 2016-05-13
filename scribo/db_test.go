@@ -6,60 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
-
-	// . "github.com/bbengfort/scribo/scribo"
 
 	"github.com/bbengfort/scribo/scribo"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
-
-var (
-	db         *sql.DB
-	err        error
-	migrations []string
-	tables     []string
-	node       *scribo.Node
-	ping       *scribo.Ping
-)
-
-// Establish a connection to the database before tests are run.
-var _ = BeforeSuite(func() {
-	By("Connecting to a testing database")
-
-	// Test the database url to make sure it ends in -test
-	dbURL := os.Getenv("TEST_DATABASE_URL")
-	Expect(strings.HasSuffix(dbURL, "-test")).To(BeTrue(), "The test database url should end in -test")
-
-	// Establish the database connection
-	db, err = connectTestDB()
-	Expect(err).NotTo(HaveOccurred(), "Could not establish a connection to the database")
-
-	// Expect that a database ping does not cause an error
-	Expect(db.Ping()).NotTo(HaveOccurred(), "Could not ping the database")
-
-	By("Loading the schema from migration files on disk")
-
-	// Load the migrations from disk
-	migrations = loadMigrations()
-
-	// Execute the migrations to the database
-	executeMigraions(migrations)
-
-	// Load the tables from the database
-	tables = listTables()
-})
-
-// Clean up the database connections after the test suite is run.
-var _ = AfterSuite(func() {
-	// Drop all the tables from the database so we can test again!
-	dropTables(tables)
-
-	// Expect that an error on closing doesn't occur
-	Expect(db.Close()).NotTo(HaveOccurred(), "Could not close the database")
-})
 
 // The test suite for the database module
 var _ = Describe("Database", func() {
@@ -163,11 +115,10 @@ var _ = Describe("Database", func() {
 			})
 
 			It("should return an ordered, limited list of nodes", func() {
-				nodes := scribo.Nodes{
-					scribo.Node{Name: "test1", Address: "127.0.0.1"},
-					scribo.Node{Name: "test2", Address: "127.0.0.2"},
-					scribo.Node{Name: "test3", Address: "127.0.0.3"},
-				}
+				var nodes scribo.Nodes
+				nodes = append(nodes, scribo.Node{Name: "test1", Address: "127.0.0.1"})
+				nodes = append(nodes, scribo.Node{Name: "test2", Address: "127.0.0.2"})
+				nodes = append(nodes, scribo.Node{Name: "test3", Address: "127.0.0.3"})
 
 				// Create the nodes
 				for _, node := range nodes {
@@ -242,8 +193,8 @@ func loadMigrations() []string {
 }
 
 // Execute the migrations to the database.
-func executeMigraions(queries []string) {
-	for _, query := range migrations {
+func executeMigrations(queries []string) {
+	for _, query := range queries {
 		_, err := db.Exec(query)
 		Expect(err).NotTo(HaveOccurred(), "Could not execute a migration SQL file to database!")
 	}
