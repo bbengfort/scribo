@@ -1,6 +1,8 @@
 # Scribo
 
 [![Build Status](https://travis-ci.org/bbengfort/scribo.svg?branch=master)](https://travis-ci.org/bbengfort/scribo)
+[![Coverage Status](https://coveralls.io/repos/github/bbengfort/scribo/badge.svg?branch=master)](https://coveralls.io/github/bbengfort/scribo?branch=master)
+[![GoDoc Reference](https://godoc.org/github.com/bbengfort/scribo/scribo?status.svg)](https://godoc.org/github.com/bbengfort/scribo/scribo)
 [![Go Report Card](https://goreportcard.com/badge/github.com/bbengfort/scribo)](https://goreportcard.com/report/github.com/bbengfort/scribo)
 [![Stories in Ready](https://badge.waffle.io/bbengfort/scribo.png?label=ready&title=Ready)](https://waffle.io/bbengfort/scribo)
 
@@ -22,19 +24,48 @@ This will fetch the Scribo packages and build them along with the `scribo` comma
 
     $ godep restore
 
+You need to create some environment variables for `scribo` to connect to the database and run, as well as for other functions like generating keys. I usually keep mine in a `.env` file in my local root (ignored by git). Future releases will automatically load the environment from this file. The variables are as follows:
+
+```bash
+export PORT=8080
+export DATABASE_URL=postgresql://localhost/scribo
+export TEST_DATABASE_URL=postgresql://localhost/scribo-test
+export SCRIBO_SECRET=theeaglefliesatmidnight
+```
+
+You can then migrate the database:
+
+    $ scribo-migrate --all
+
 The web server can then be run as follows:
 
-    $ go run cmd/scribo/main.go
+    $ scribo
 
 And the tests can be run as follows:
 
-    $ ginkgo -r -v ./scribo/...
+    $ ginkgo -r -v
 
-Hopefully that's enough to get you up and running!
+Finally to register a node for testing the API you an use the following command:
+
+    $ scribo-register --addr 127.0.0.1 --dns test.dyndns.net testnode
+
+The output of this command is the key that you need to use to sign HAWK requests to the API. An example of how to create a client that connects to the API is here: [scribo-client.go](https://gist.github.com/bbengfort/6f156f752435619096bd4770ebea19cb).
+
+Remember to rebuild the commands as you're coding or to `go run` them directly.
 
 ## About
 
 Mora (delay, waiting) observes ping latencies between nodes in a wide area, heterogenous, user-oriented network by running a local service that pings other nodes in the network. Oro (speak) is the name of the mobile application, and Scio (understand) is the name of the desktop client. The ping data is collected by a centralized RESTful microservice called Scribo (record). This data will be used for scientific research concerning distributed systems.
+
+### Documentation
+
+[Documenting go code correctly](https://blog.golang.org/godoc-documenting-go-code) is vital, because [godoc.org] will automatically [pull package documentation](https://godoc.org/-/about) from GitHub.
+
+To view the documentation locally before pushing:
+
+    godoc -http=:6060
+
+This will provide a dashboard for the Go code on your local machine. You can find documentation for this package here: [godoc.org: package scribo](https://godoc.org/github.com/bbengfort/scribo/scribo).
 
 ### Contributing
 
@@ -86,6 +117,14 @@ Thank you for all your help contributing to make Scribo a great project!
 The release versions that are tagged in Git. You can see the tags through the GitHub web application and download the tarball of the version you'd like.
 
 The versioning uses a three part version system, "a.b.c" - "a" represents a major release that may not be backwards compatible. "b" is incremented on minor releases that may contain extra features, but are backwards compatible. "c" releases are bug fixes or other micro changes that developers should feel free to immediately update to.
+
+## Version 1.0
+
+* **tag**: [v1.0](https://github.com/bbengfort/scribo/releases/tag/v1.0)
+* **deployment**: Thursday, May 12, 2016
+* **commit**: [215ac45](https://github.com/bbengfort/scribo/commit/215ac459b67e5709e1eb20b0bdb07b63b9ce5f32)
+
+This build is the first working version of the API that provides an authenticated service for managing nodes and latency reports (pings) in the Mora network. The API is backed by a PostgreSQL database, requires HAWK authentication for access, and exposes a simple single page dashboard for viewing the current status. There are also  helper commands for migrating the database as well as registering nodes via the command line (there is no current way to register through the API). This version of the app is deployed to Heroku and can be found at [https://mora-scribo.herokuapp.com/](https://mora-scribo.herokuapp.com/), though we'll probably update this to a more appropriate domain soon.
 
 ## Version 0.1
 

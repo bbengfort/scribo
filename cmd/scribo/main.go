@@ -1,3 +1,4 @@
+// A command that runs the Scribo web API server
 package main
 
 import (

@@ -1,3 +1,4 @@
+// A command that runs database migrations for Scribo
 package main
 
 import (
@@ -79,6 +80,7 @@ func migrateDatabase(ctx *cli.Context) error {
 func loadMigrations() []string {
 
 	// Create a list of files in the migrations directory
+	// BUG(bbengfort): relative import for migrations needs to be configured or searched, not guessed.
 	files, err := filepath.Glob("migrations/[0-9][0-9][0-9][0-9]-*.sql")
 	check(err)
 

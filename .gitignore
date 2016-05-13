@@ -25,3 +25,5 @@ _testmain.go
 
 # Heroku .env file
 .env
+
+*.coverprofile
