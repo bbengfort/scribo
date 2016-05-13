@@ -11,8 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// Missing status codes that aren't supplied by net/http
 const (
-	// StatusUnprocessableEntity is a missing status code constant in http
 	StatusUnprocessableEntity = 422
 )
 
