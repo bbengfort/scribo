@@ -20,7 +20,24 @@ const (
 // API to display information about the ping status.
 func Index(app *App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := app.Templates.ExecuteTemplate(w, "index", nil)
+		var err error
+
+		// Construct the dashboard for the Index
+		dashboard := new(Dashboard)
+		dashboard.Nodes, err = FetchNodes(app.DB, 10)
+		if err != nil {
+			app.Error(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		dashboard.Pings, err = FetchPings(app.DB, 10)
+		if err != nil {
+			app.Error(w, err, http.StatusInternalServerError)
+			return
+		}
+
+		// Render the template with the dashboard context
+		err = app.Templates.ExecuteTemplate(w, "index", dashboard)
 		if err != nil {
 			app.Error(w, err, http.StatusInternalServerError)
 			return

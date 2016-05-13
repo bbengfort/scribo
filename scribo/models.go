@@ -35,6 +35,12 @@ type Nodes []Node
 // Pings is a collection of latency reports for use elsewhere.
 type Pings []Ping
 
+// Dashboard is a collection of nodes and pings for display.
+type Dashboard struct {
+	Nodes Nodes // A limited, ordered collection of nodes for display
+	Pings Pings // A limited, ordered collection of pings for display
+}
+
 // Save a node struct to the database. This function checks if the node has an
 // ID or not. If it does, it will execute a SQL UPDATE, otherwise it will
 // execute a SQL INSERT. Returns a boolean if the node was created (INSERT) or
