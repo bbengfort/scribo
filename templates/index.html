@@ -13,25 +13,77 @@
 
         <div class="container">
           <div class="row">
-            <div class="col-md-12">
 
+            <!-- Node Column -->
+            <div class="col-md-5">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h3 class="panel-title">Registered Devices</h3>
+                </div>
+
+                <div class="panel-body">
+                  <p>The last ten updated devices on Scribo:</p>
+                </div>
+
+                <table class="table table-striped table-bordered">
+                  <thead>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>IP Address</th>
+                    <th>Domain Name</th>
+                  </thead>
+                  <tbody>
+                    {{ with .Nodes }}
+                      {{ range . }}
+                    <tr>
+                      <td>{{ .ID }}</td>
+                      <td>{{ .Name }}</td>
+                      <td>{{ .Address }}</td>
+                      <td>{{ .DNS }}</td>
+                    </tr>
+                      {{ end }}
+                    {{ end }}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Ping Column -->
+            <div class="col-md-7">
               <div class="panel panel-default">
                 <div class="panel-heading">
                   <h3 class="panel-title">Latency Report</h3>
                 </div>
+
                 <div class="panel-body">
-                  <p>This application is an uptime collection mechanism associated with the Mora project.</p>
-
-                  <img style="width:100%;" src="/assets/img/mora.png" title="Mora Architecture Diagram" />
-                  <p class="text-center text-info"><small><strong>Figure 1: The Mora Architecture</strong></small></p>
-
-
-                  <p>Mora (delay, waiting) observes ping latencies between nodes in a wide area, heterogenous, user-oriented network by running a local service that pings other nodes in the network. Oro (speak) is the name of the mobile application, and Scio (understand) is the name of the desktop client.</p>
-                  <p>Soon this page will display the latest observed status of the ping network, but is still under construction.</p>
+                  <p>The latest pings from the API are as follows:</p>
                 </div>
-              </div>
 
+                <table class="table table-striped table-bordered">
+                  <thead>
+                    <th>Source</th>
+                    <th>Target</th>
+                    <th>Latency</th>
+                    <th>Timed Out</th>
+                    <th>Size</th>
+                  </thead>
+                  <tbody>
+                    {{ with .Pings }}
+                      {{ range .}}
+                    <tr>
+                      <td>{{ .Source }}</td>
+                      <td>{{ .Target }}</td>
+                      <td>{{ .Latency }}</td>
+                      <td>{{ .Timeout }}</td>
+                      <td>{{ .Payload }}</td>
+                    </tr>
+                      {{ end }}
+                    {{ end }}
+                  </tbody>
+                </table>
+              </div>
             </div>
+
           </div><!-- row ends -->
 
         </div><!-- container ends -->
