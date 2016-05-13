@@ -15,7 +15,7 @@ import (
 )
 
 // Version specifies what version of Scribo we're on.
-const Version = "0.1"
+const Version = "1.0"
 
 // App defines the complete structure of a web application including a
 // router for multiplexing, storages, assets, templates, cookies, and more.
