@@ -2,8 +2,7 @@ package scribo
 
 import (
 	"encoding/json"
-	"fmt"
-	"html/template"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -12,168 +11,402 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	// StatusUnprocessableEntity is a missing status code constant in http
+	StatusUnprocessableEntity = 422
+)
+
 // Index handles the root route by rendering a small web page that uses the
 // API to display information about the ping status.
-func Index(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("templates/index.html")
+func Index(app *App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var err error
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+		// Construct the dashboard for the Index
+		dashboard := new(Dashboard)
+		dashboard.Nodes, err = FetchNodes(app.DB, 10)
+		if err != nil {
+			app.Error(w, err, http.StatusInternalServerError)
+			return
+		}
 
-	err = tmpl.Execute(w, nil)
+		dashboard.Pings, err = FetchPings(app.DB, 10)
+		if err != nil {
+			app.Error(w, err, http.StatusInternalServerError)
+			return
+		}
 
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// Render the template with the dashboard context
+		err = app.Templates.ExecuteTemplate(w, "index", dashboard)
+		if err != nil {
+			app.Error(w, err, http.StatusInternalServerError)
+			return
+		}
 	}
 }
 
-// NodeList handles the listing of todo items
-func NodeList(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(nodes); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+type (
+	// NodeCollection is a RESTful resource for listing and creating nodes.
+	NodeCollection struct {
+		PutNotSupported
+		DeleteNotSupported
 	}
+
+	// NodeDetail is a RESTful resource for updating and deleting nodes.
+	NodeDetail struct {
+		PostNotSupported
+	}
+
+	// PingCollection is a RESTful resource for listing and creating pings.
+	PingCollection struct {
+		PutNotSupported
+		DeleteNotSupported
+	}
+
+	// PingDetail is a RESTful resource for updating and deleting pings.
+	PingDetail struct {
+		PostNotSupported
+	}
+)
+
+// Get returns the listing of nodes
+func (r NodeCollection) Get(app *App, request *http.Request) (int, interface{}, error) {
+	nodes, err := FetchNodes(app.DB, 10)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	return http.StatusOK, nodes, nil
 }
 
-// NodeCreate handles the creation of a todo item from post
-func NodeCreate(w http.ResponseWriter, r *http.Request) {
+// Post handles the creation of a node from JSON in the request body
+func (r NodeCollection) Post(app *App, request *http.Request) (int, interface{}, error) {
 	var node Node
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
 
+	// Read the data from the request stream (limit the size to 1 MB)
+	body, err := ioutil.ReadAll(io.LimitReader(request.Body, 1048576))
+
+	// Todo return a 413 (entity too large) if it's the limit that's reached.
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return http.StatusInternalServerError, nil, err
 	}
 
-	if err := r.Body.Close(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Attempt to close the body of the request for reading
+	if err := request.Body.Close(); err != nil {
+		return http.StatusInternalServerError, nil, err
 	}
 
+	// Unmarshal the Post into a Node struct
 	if err := json.Unmarshal(body, &node); err != nil {
-		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		// If JSON parsing fails send back a 422 "unprocessable entity"
+		response := make(map[string]string)
+		response["code"] = strconv.Itoa(StatusUnprocessableEntity)
+		response["reason"] = "Could not parse JSON into a Node object."
+		response["error"] = err.Error()
+		return StatusUnprocessableEntity, response, nil
 	}
 
-	t := RepoCreateNode(node)
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(t); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Create the node in the database
+	_, dberr := node.Save(app.DB)
+
+	// Handle the creation conditions
+	switch {
+	case dberr != nil:
+		return http.StatusConflict, nil, dberr
+	default:
+		return http.StatusCreated, node, nil
 	}
+
 }
 
-// NodeDetail handles the return of a single item by index.
-func NodeDetail(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	nodeID, err := strconv.ParseUint(vars["ID"], 0, 64)
+// Get returns a single node from the database.
+func (r NodeDetail) Get(app *App, request *http.Request) (int, interface{}, error) {
+	// Parse the variables from the URL route.
+	vars := mux.Vars(request)
+	nodeID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-		w.WriteHeader(http.StatusBadRequest)
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		return http.StatusInternalServerError, nil, err
 	}
 
-	node := RepoFindNode(nodeID)
+	// Query the database for the node by the ID.
+	node, err := GetNode(app.DB, nodeID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
 
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(node); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	return http.StatusOK, node, nil
+}
+
+// Put updates a node in the database
+func (r NodeDetail) Put(app *App, request *http.Request) (int, interface{}, error) {
+	// Parse the variables from the URL route.
+	vars := mux.Vars(request)
+	nodeID, err := strconv.ParseInt(vars["ID"], 0, 64)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Query the database for the node by the ID.
+	node, err := GetNode(app.DB, nodeID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
+
+	// Now perform the update ...
+	// Read the data from the request stream (limit the size to 1 MB)
+	body, err := ioutil.ReadAll(io.LimitReader(request.Body, 1048576))
+
+	// Todo return a 413 (entity too large) if it's the limit that's reached.
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Attempt to close the body of the request for reading
+	if err := request.Body.Close(); err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Create a temporary node to  unmarshall data to.
+	var fields map[string]interface{}
+
+	// Unmarshal the Put into a Node struct
+	if err := json.Unmarshal(body, &fields); err != nil {
+		// If JSON parsing fails send back a 422 "unprocessable entity"
+		response := make(map[string]string)
+		response["code"] = strconv.Itoa(StatusUnprocessableEntity)
+		response["reason"] = "Could not parse JSON into a Node object."
+		response["error"] = err.Error()
+		return StatusUnprocessableEntity, response, nil
+	}
+
+	// Update the node with the fields that are updateable.
+	if val, ok := fields["name"]; ok {
+		node.Name = val.(string)
+	}
+
+	if val, ok := fields["address"]; ok {
+		node.Address = val.(string)
+	}
+
+	if val, ok := fields["dns"]; ok {
+		node.DNS = val.(string)
+	}
+
+	// Save the node updates in the database
+	_, dberr := node.Save(app.DB)
+
+	// Handle the creation conditions
+	switch {
+	case dberr != nil:
+		return http.StatusConflict, nil, dberr
+	default:
+		return http.StatusOK, node, nil
+	}
+
+}
+
+// Delete a node from the database
+func (r NodeDetail) Delete(app *App, request *http.Request) (int, interface{}, error) {
+	// Parse the variables from the URL route.
+	vars := mux.Vars(request)
+	nodeID, err := strconv.ParseInt(vars["ID"], 0, 64)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Query the database for the node by the ID.
+	node, err := GetNode(app.DB, nodeID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
+
+	// Delete the Node from the database
+	deleted, err := node.Delete(app.DB)
+
+	switch {
+	case err != nil:
+		return http.StatusInternalServerError, nil, err
+	case !deleted:
+		return http.StatusConflict, nil, errors.New("Unable to delete node!")
+	default:
+		return http.StatusNoContent, nil, nil
 	}
 }
 
-// NodeUpdate handles the return of a single item by index.
-func NodeUpdate(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	nodeID := vars["ID"]
-	fmt.Fprintln(w, "Node update:", nodeID)
-}
+// Get returns the listing of pings
+func (r PingCollection) Get(app *App, request *http.Request) (int, interface{}, error) {
+	pings, err := FetchPings(app.DB, 10)
 
-// NodeDelete handles the return of a single item by index.
-func NodeDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	nodeID := vars["ID"]
-	fmt.Fprintln(w, "Node delete:", nodeID)
-}
-
-// PingList handles the listing of todo items
-func PingList(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusOK)
-
-	if err := json.NewEncoder(w).Encode(pings); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
 	}
+
+	return http.StatusOK, pings, nil
 }
 
-// PingCreate handles the creation of a todo item from post
-func PingCreate(w http.ResponseWriter, r *http.Request) {
+// Post handles the creation of a ping from JSON in the request body
+func (r PingCollection) Post(app *App, request *http.Request) (int, interface{}, error) {
 	var ping Ping
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
+
+	// Read the data from the request stream (limit the size to 1 MB)
+	body, err := ioutil.ReadAll(io.LimitReader(request.Body, 1048576))
+
+	// Todo return a 413 (entity too large) if it's the limit that's reached.
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Attempt to close the body of the request for reading
+	if err := request.Body.Close(); err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Unmarshal the Post into a Node struct
+	if err := json.Unmarshal(body, &ping); err != nil {
+		// If JSON parsing fails send back a 422 "unprocessable entity"
+		response := make(map[string]string)
+		response["code"] = strconv.Itoa(StatusUnprocessableEntity)
+		response["reason"] = "Could not parse JSON into a Ping object."
+		response["error"] = err.Error()
+		return StatusUnprocessableEntity, response, nil
+	}
+
+	// Create the ping in the database
+	_, dberr := ping.Save(app.DB)
+
+	// Handle the creation conditions
+	switch {
+	case dberr != nil:
+		return http.StatusConflict, nil, dberr
+	default:
+		return http.StatusCreated, ping, nil
+	}
+}
+
+// Get returns a single ping from the database.
+func (r PingDetail) Get(app *App, request *http.Request) (int, interface{}, error) {
+	// Parse the variables from the URL route.
+	vars := mux.Vars(request)
+	pingID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return http.StatusInternalServerError, nil, err
 	}
 
-	if err := r.Body.Close(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
 	}
 
-	if err := json.Unmarshal(body, &ping); err != nil {
-		w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	return http.StatusOK, ping, nil
+}
+
+// Put updates a ping in the database
+func (r PingDetail) Put(app *App, request *http.Request) (int, interface{}, error) {
+	// Parse the variables from the URL route.
+	vars := mux.Vars(request)
+	pingID, err := strconv.ParseInt(vars["ID"], 0, 64)
+
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
 	}
 
-	t := RepoCreatePing(ping)
-	w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(t); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
+
+	// Now perform the update ...
+	// Read the data from the request stream (limit the size to 1 MB)
+	body, err := ioutil.ReadAll(io.LimitReader(request.Body, 1048576))
+
+	// Todo return a 413 (entity too large) if it's the limit that's reached.
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Attempt to close the body of the request for reading
+	if err := request.Body.Close(); err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	// Create a temporary node to  unmarshall data to.
+	var fields map[string]interface{}
+
+	// Unmarshal the Put into a Node struct
+	if err := json.Unmarshal(body, &fields); err != nil {
+		// If JSON parsing fails send back a 422 "unprocessable entity"
+		response := make(map[string]string)
+		response["code"] = strconv.Itoa(StatusUnprocessableEntity)
+		response["reason"] = "Could not parse JSON into a Ping object."
+		response["error"] = err.Error()
+		return StatusUnprocessableEntity, response, nil
+	}
+
+	// Update the node with the fields that are updateable.
+	if val, ok := fields["source"]; ok {
+		ping.Source = val.(int64)
+	}
+
+	if val, ok := fields["target"]; ok {
+		ping.Target = val.(int64)
+	}
+
+	if val, ok := fields["payload"]; ok {
+		ping.Payload = val.(int)
+	}
+
+	if val, ok := fields["latency"]; ok {
+		ping.Latency = val.(float64)
+	}
+
+	if val, ok := fields["timeout"]; ok {
+		ping.Timeout = val.(bool)
+	}
+
+	// Save the node updates in the database
+	_, dberr := ping.Save(app.DB)
+
+	// Handle the creation conditions
+	switch {
+	case dberr != nil:
+		return http.StatusConflict, nil, dberr
+	default:
+		return http.StatusOK, ping, nil
 	}
 }
 
-// PingDetail handles the return of a single item by index.
-func PingDetail(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	pingID := vars["ID"]
-	fmt.Fprintln(w, "Ping show:", pingID)
-}
+// Delete a ping from the database
+func (r PingDetail) Delete(app *App, request *http.Request) (int, interface{}, error) {
+	// Parse the variables from the URL route.
+	vars := mux.Vars(request)
+	pingID, err := strconv.ParseInt(vars["ID"], 0, 64)
 
-// PingUpdate handles the return of a single item by index.
-func PingUpdate(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	pingID := vars["ID"]
-	fmt.Fprintln(w, "Ping update:", pingID)
-}
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
 
-// PingDelete handles the return of a single item by index.
-func PingDelete(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	pingID := vars["ID"]
-	fmt.Fprintln(w, "Ping delete:", pingID)
+	// Query the database for the ping by the ID.
+	ping, err := GetPing(app.DB, pingID)
+	if err != nil {
+		return http.StatusNotFound, nil, err
+	}
+
+	// Delete the Ping from the database
+	deleted, err := ping.Delete(app.DB)
+
+	switch {
+	case err != nil:
+		return http.StatusInternalServerError, nil, err
+	case !deleted:
+		return http.StatusConflict, nil, errors.New("Unable to delete ping!")
+	default:
+		return http.StatusNoContent, nil, nil
+	}
 }
