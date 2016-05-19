@@ -59,7 +59,7 @@ Mora (delay, waiting) observes ping latencies between nodes in a wide area, hete
 
 ### Documentation
 
-[Documenting go code correctly](https://blog.golang.org/godoc-documenting-go-code) is vital, because [godoc.org] will automatically [pull package documentation](https://godoc.org/-/about) from GitHub.
+[Documenting go code correctly](https://blog.golang.org/godoc-documenting-go-code) is vital, because [godoc.org](https://godoc.org/) will automatically [pull package documentation](https://godoc.org/-/about) from GitHub.
 
 To view the documentation locally before pushing:
 
