@@ -76,7 +76,7 @@ func Logger(app *App, inner http.Handler) http.Handler {
 	})
 }
 
-// Debugger is a decorator for http handlers to print out the incomming request
+// Debugger is a decorator for http handlers to print out the incoming request
 func Debugger(app *App, inner http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Print the request

@@ -226,7 +226,7 @@ func truncateTables(tables []string) {
 	Expect(err).NotTo(HaveOccurred(), "Could not begin table truncate transaction!")
 
 	// Defer the rollback after the function returns
-	// If the transaction was commited, this will do nothing
+	// If the transaction was committed, this will do nothing
 	defer txn.Rollback()
 	query := "TRUNCATE TABLE %s RESTART IDENTITY CASCADE"
 
@@ -248,7 +248,7 @@ func dropTables(tables []string) {
 	Expect(err).NotTo(HaveOccurred(), "Could not begin drop table transaction!")
 
 	// Defer the rollback after the function returns
-	// If the transaction was commited, this will do nothing
+	// If the transaction was committed, this will do nothing
 	defer txn.Rollback()
 	query := "DROP TABLE %s CASCADE"
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/bbengfort/scribo/scribo"
+	"github.com/joho/godotenv"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -26,6 +27,9 @@ var (
 
 // Establish a connection to the database before tests are run.
 var _ = BeforeSuite(func() {
+	// Load the .env file if it exists
+	godotenv.Load()
+
 	var err error
 	By("Connecting to a testing database")
 

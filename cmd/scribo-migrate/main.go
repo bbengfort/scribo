@@ -11,9 +11,12 @@ import (
 
 	"github.com/bbengfort/scribo/scribo"
 	"github.com/codegangsta/cli"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load the .env file if it exists
+	godotenv.Load()
 
 	// Instantiate the command line application
 	app := cli.NewApp()
